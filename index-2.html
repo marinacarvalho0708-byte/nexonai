@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexon AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f9f8f6;
+  --sidebar-bg: #f0ede8;
+  --surface: #ffffff;
+  --border: #e4e1db;
+  --border-hover: #ccc9c2;
+  --text-primary: #1a1916;
+  --text-secondary: #6b6860;
+  --text-tertiary: #a8a49e;
+  --accent: #2d6a4f;
+  --accent-light: #e8f4ef;
+  --user-bubble: #f0ede8;
+  --sidebar-w: 260px;
+}
+
+html, body { height: 100%; font-family: 'Geist', sans-serif; background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.25s ease; }
+.sidebar-header { padding: 20px 16px 16px; display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: baseline; gap: 5px; }
+.brand-name { font-family: 'Instrument Serif', serif; font-size: 22px; letter-spacing: -0.3px; }
+.brand-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-bottom: 3px; flex-shrink: 0; }
+.icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.15s; }
+.icon-btn:hover { background: var(--surface); border-color: var(--border-hover); color: var(--text-primary); }
+.icon-btn svg { width: 14px; height: 14px; }
+.section-label { padding: 12px 16px 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); }
+.chat-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+.chat-list::-webkit-scrollbar { width: 3px; }
+.chat-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.chat-item { display: block; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; margin-bottom: 1px; }
+.chat-item:hover, .chat-item.active { background: var(--surface); border-color: var(--border); color: var(--text-primary); }
+.sidebar-footer { padding: 12px 8px; border-top: 1px solid var(--border); }
+.usage-wrap { padding: 10px 10px 12px; }
+.usage-row { display: flex; justify-content: space-between; margin-bottom: 7px; }
+.usage-label { font-size: 12px; color: var(--text-secondary); }
+.usage-count { font-size: 12px; color: var(--text-tertiary); }
+.usage-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.usage-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+.usage-fill.warn { background: #c97d2a; }
+.usage-fill.out { background: #c94a2a; }
+.upgrade-btn { display: none; width: 100%; margin-top: 10px; padding: 9px; background: var(--accent); color: #fff; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; border: none; border-radius: 9px; cursor: pointer; transition: opacity 0.15s; }
+.upgrade-btn:hover { opacity: 0.88; }
+.upgrade-btn.show { display: block; }
+
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.topbar { display: none; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.topbar-brand { font-family: 'Instrument Serif', serif; font-size: 18px; }
+
+.messages { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 40px 24px; user-select: none; }
+.empty-title { font-family: 'Instrument Serif', serif; font-size: 34px; letter-spacing: -0.5px; }
+.empty-sub { font-size: 14px; color: var(--text-tertiary); text-align: center; max-width: 340px; line-height: 1.6; }
+
+.msg-row { padding: 22px max(24px, calc(50% - 360px)); animation: up 0.22s ease; }
+.msg-row + .msg-row { padding-top: 4px; }
+@keyframes up { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+.msg-sender { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+.nora-row .msg-sender { color: var(--accent); }
+.msg-content { font-size: 15px; line-height: 1.78; color: var(--text-primary); max-width: 680px; }
+.msg-content p + p { margin-top: 12px; }
+.msg-content strong { font-weight: 500; }
+.msg-content ul, .msg-content ol { padding-left: 20px; margin: 10px 0; }
+.msg-content li { margin-bottom: 5px; }
+.msg-content code { font-family: monospace; font-size: 13px; background: var(--user-bubble); padding: 2px 5px; border-radius: 4px; }
+.user-row .msg-content { display: inline-block; background: var(--user-bubble); padding: 10px 14px; border-radius: 12px; max-width: 560px; }
+
+.typing-dots { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+.typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-tertiary); animation: blink 1.3s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity:0.3; transform:scale(1); } 40% { opacity:1; transform:scale(1.2); } }
+
+.paywall { display: none; margin: 0 max(24px, calc(50% - 360px)) 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px; max-width: 680px; animation: up 0.3s ease; }
+.paywall.show { display: block; }
+.paywall-title { font-family: 'Instrument Serif', serif; font-size: 22px; letter-spacing: -0.3px; margin-bottom: 8px; }
+.paywall-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; }
+.plans { display: flex; gap: 12px; }
+.plan { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; cursor: pointer; transition: all 0.15s; }
+.plan:hover, .plan.featured { border-color: var(--accent); background: var(--accent-light); }
+.plan-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
+.plan.featured .plan-label { color: var(--accent); }
+.plan-price { font-family: 'Instrument Serif', serif; font-size: 28px; letter-spacing: -0.5px; }
+.plan-period { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+.plan-note { font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 5px; }
+
+.input-area { padding: 14px max(24px, calc(50% - 360px)) 18px; flex-shrink: 0; }
+.input-area.blocked .input-box { opacity: 0.4; pointer-events: none; }
+.input-box { display: flex; align-items: flex-end; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 10px 10px 16px; transition: border-color 0.18s; max-width: 720px; }
+.input-box:focus-within { border-color: var(--border-hover); }
+textarea { flex: 1; background: transparent; border: none; outline: none; resize: none; font-family: 'Geist', sans-serif; font-size: 15px; color: var(--text-primary); line-height: 1.55; min-height: 24px; max-height: 180px; padding: 1px 0; }
+textarea::placeholder { color: var(--text-tertiary); }
+.send-btn { width: 32px; height: 32px; border-radius: 8px; background: var(--text-primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
+.send-btn:hover { opacity: 0.8; }
+.send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { opacity: 0.18; cursor: not-allowed; transform: none; }
+.send-btn svg { width: 13px; height: 13px; stroke: #fff; fill: none; }
+.input-footer { margin-top: 9px; font-size: 11px; color: var(--text-tertiary); text-align: center; max-width: 720px; }
+
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 10; }
+
+@media (max-width: 700px) {
+  .sidebar { position: fixed; top:0; left:0; bottom:0; z-index:20; transform:translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .overlay.open { display: block; }
+  .topbar { display: flex; }
+  .empty-title { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-name">Nexon AI</span>
+        <div class="brand-dot"></div>
+      </div>
+      <button class="icon-btn" onclick="newChat()" title="Nova conversa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="section-label">Conversas</div>
+    <div class="chat-list" id="chat-list">
+      <div class="chat-item active" id="cur-item">Nova conversa</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="usage-wrap">
+        <div class="usage-row">
+          <span class="usage-label">Mensagens grátis</span>
+          <span class="usage-count" id="uc">— / 8</span>
+        </div>
+        <div class="usage-bar"><div class="usage-fill" id="uf" style="width:100%"></div></div>
+      </div>
+      <button class="upgrade-btn" id="upbtn" onclick="showPaywall()">Fazer upgrade</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <span class="topbar-brand">Nexon AI</span>
+      <div style="width:30px"></div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="empty-state" id="empty">
+        <div class="empty-title">Como posso ajudar?</div>
+        <div class="empty-sub">Faça qualquer pergunta sobre neurociência ou desenvolvimento pessoal.</div>
+      </div>
+    </div>
+
+    <div class="paywall" id="paywall">
+      <div class="paywall-title">Continue sua jornada com Nexon AI</div>
+      <div class="paywall-sub">Você utilizou todas as mensagens do plano gratuito. Para continuar com acesso ilimitado, escolha um plano.</div>
+      <div class="plans">
+        <div class="plan" onclick="handleUpgrade('mensal')">
+          <div class="plan-label">Mensal</div>
+          <div class="plan-price">$9</div>
+          <div class="plan-period">por mês</div>
+        </div>
+        <div class="plan featured" onclick="handleUpgrade('anual')">
+          <div class="plan-label">Anual</div>
+          <div class="plan-price">$79</div>
+          <div class="plan-period">por ano</div>
+          <div class="plan-note">Economize 28%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area" id="input-area">
+      <div class="input-box">
+        <textarea id="inp" placeholder="Mensagem para Nexon AI..." rows="1" onkeydown="onKey(event)" oninput="onInput(this)"></textarea>
+        <button class="send-btn" id="sbtn" disabled onclick="send()">
+          <svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="input-footer">Nexon AI pode cometer erros. Não substitui acompanhamento profissional de saúde.</div>
+    </div>
+  </main>
+</div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<script>
+// ─── CONFIGURAÇÃO ───────────────────────────────────────────────
+// Em produção, troque pela URL do seu backend no Railway
+const API_URL = 'https://SEU-BACKEND.railway.app'
+// ────────────────────────────────────────────────────────────────
+
+let history = [], remaining = 8, busy = false
+const g = id => document.getElementById(id)
+
+async function loadUsage() {
+  try {
+    const res = await fetch(`${API_URL}/api/usage`)
+    const data = await res.json()
+    remaining = data.remaining
+    updateUsageUI()
+  } catch { updateUsageUI() }
+}
+
+function updateUsageUI() {
+  const pct = (remaining / 8) * 100
+  g('uc').textContent = `${remaining} / 8`
+  const f = g('uf')
+  f.style.width = pct + '%'
+  f.className = 'usage-fill' + (remaining <= 0 ? ' out' : remaining <= 2 ? ' warn' : '')
+  if (remaining <= 3) g('upbtn').classList.add('show')
+  if (remaining <= 0) { g('input-area').classList.add('blocked'); showPaywall() }
+}
+
+function showPaywall() {
+  g('paywall').classList.add('show')
+  setTimeout(() => g('paywall').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100)
+}
+
+function handleUpgrade(plan) {
+  // Integrar Stripe aqui
+  alert('Integração com Stripe em breve — plano: ' + plan)
+}
+
+function toggleSidebar() {
+  g('sidebar').classList.toggle('open')
+  g('overlay').classList.toggle('open')
+}
+
+function newChat() {
+  if (history.length) {
+    const t = history[0].content.slice(0, 36) + (history[0].content.length > 36 ? '...' : '')
+    const el = document.createElement('div')
+    el.className = 'chat-item'
+    el.textContent = t
+    g('chat-list').insertBefore(el, g('cur-item').nextSibling)
+  }
+  history = []
+  g('messages').innerHTML = ''
+  const es = document.createElement('div')
+  es.className = 'empty-state'; es.id = 'empty'
+  es.innerHTML = '<div class="empty-title">Como posso ajudar?</div><div class="empty-sub">Faça qualquer pergunta sobre neurociência ou desenvolvimento pessoal.</div>'
+  g('messages').appendChild(es)
+  g('paywall').classList.remove('show')
+  g('cur-item').textContent = 'Nova conversa'
+  if (g('sidebar').classList.contains('open')) toggleSidebar()
+}
+
+function onInput(el) {
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 180) + 'px'
+  g('sbtn').disabled = !el.value.trim() || busy || remaining <= 0
+}
+
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!g('sbtn').disabled) send() }
+}
+
+function addRow(role, text) {
+  const es = g('empty'); if (es) es.remove()
+  const row = document.createElement('div')
+  row.className = 'msg-row ' + (role === 'user' ? 'user-row' : 'nora-row')
+  const sender = document.createElement('div')
+  sender.className = 'msg-sender'
+  sender.textContent = role === 'user' ? 'Você' : 'Nexon AI'
+  const content = document.createElement('div')
+  content.className = 'msg-content'
+  content.innerHTML = fmt(text)
+  row.appendChild(sender); row.appendChild(content)
+  g('messages').appendChild(row)
+  g('messages').scrollTop = g('messages').scrollHeight
+}
+
+function addTyping() {
+  const row = document.createElement('div')
+  row.className = 'msg-row nora-row'; row.id = 'trow'
+  const s = document.createElement('div'); s.className = 'msg-sender'; s.textContent = 'Nexon AI'
+  const d = document.createElement('div'); d.className = 'typing-dots'
+  d.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>'
+  row.appendChild(s); row.appendChild(d)
+  g('messages').appendChild(row)
+  g('messages').scrollTop = g('messages').scrollHeight
+}
+
+function removeTyping() { const t = g('trow'); if (t) t.remove() }
+
+function fmt(t) {
+  return '<p>' + t
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n\n+/g, '</p><p>')
+    .replace(/\n/g, '<br>') + '</p>'
+}
+
+async function send() {
+  const inp = g('inp'), text = inp.value.trim()
+  if (!text || busy || remaining <= 0) return
+  inp.value = ''; inp.style.height = 'auto'
+  g('sbtn').disabled = true; busy = true
+  addRow('user', text)
+  history.push({ role: 'user', content: text })
+  if (history.length === 1) g('cur-item').textContent = text.slice(0, 34) + (text.length > 34 ? '...' : '')
+  addTyping()
+
+  try {
+    const res = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history })
+    })
+
+    const data = await res.json()
+    removeTyping()
+
+    if (res.status === 402 || data.error === 'limite_atingido') {
+      remaining = 0; updateUsageUI(); return
+    }
+
+    const reply = data.reply || 'Ocorreu um erro. Tente novamente.'
+    history.push({ role: 'assistant', content: reply })
+    addRow('assistant', reply)
+    remaining = data.remaining ?? remaining - 1
+    updateUsageUI()
+  } catch {
+    removeTyping()
+    addRow('assistant', 'Não foi possível conectar. Verifique sua conexão e tente novamente.')
+  }
+
+  busy = false
+  g('sbtn').disabled = !g('inp').value.trim() || remaining <= 0
+}
+
+loadUsage()
+g('inp').focus()
+</script>
+</body>
+</html>
