@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PWZKTP39');</script>
+<!-- End Google Tag Manager -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuxon AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0b0f; --sidebar-bg: #0f1117; --surface: #13161d;
+  --border: rgba(255,255,255,0.07); --border-hover: rgba(255,255,255,0.14);
+  --text-primary: #f1f3f4; --text-secondary: #9aa0a6; --text-tertiary: #4a5060;
+  --accent: #52b788; --accent-light: rgba(82,183,136,0.1);
+  --user-bubble: #1a1e2a;
+  --node-pink: #e879a0; --node-blue: #60a5fa;
+  --node-pink-glow: rgba(232,121,160,0.3); --node-blue-glow: rgba(96,165,250,0.3);
+  --sidebar-w: 240px;
+}
+html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; font-size: 15px; line-height: 1.65; overflow: hidden; }
+
+/* ── MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #13161d; border: 1px solid var(--border); border-radius: 18px; padding: 36px 32px; width: 100%; max-width: 380px; position: relative; animation: up 0.2s ease; }
+.modal-close { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; color: var(--text-tertiary); font-size: 18px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+.modal-close:hover { background: var(--surface); color: var(--text-primary); }
+.auth-logo { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 4px; }
+.auth-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 24px; line-height: 1.5; }
+.auth-tabs { display: flex; gap: 3px; background: var(--bg); border-radius: 8px; padding: 3px; margin-bottom: 20px; }
+.auth-tab { flex: 1; padding: 6px; text-align: center; font-size: 13px; font-family: 'Inter', sans-serif; border: none; background: transparent; cursor: pointer; border-radius: 6px; color: var(--text-secondary); transition: all 0.15s; }
+.auth-tab.active { background: var(--surface); color: var(--text-primary); font-weight: 500; }
+.auth-field { margin-bottom: 12px; }
+.auth-field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+.auth-field input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-primary); background: var(--bg); outline: none; transition: border-color 0.15s; }
+.auth-field input:focus { border-color: var(--accent); }
+.auth-btn { width: 100%; padding: 10px; background: var(--accent); color: #0a0b0f; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 2px; }
+.auth-btn:hover { opacity: 0.85; }
+.auth-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+.auth-divider span { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.social-btn { width: 100%; padding: 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; margin-bottom: 7px; }
+.social-btn:hover { border-color: var(--border-hover); }
+.social-btn svg { width: 17px; height: 17px; }
+.auth-error { font-size: 11px; color: #e87979; margin-top: 6px; text-align: center; min-height: 14px; }
+
+/* ── SIGNIN BANNER ── */
+.signin-banner { background: rgba(82,183,136,0.08); border-bottom: 1px solid rgba(82,183,136,0.15); padding: 7px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+.signin-banner span { font-size: 12px; color: var(--accent); }
+.signin-banner button { font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; color: var(--accent); background: transparent; border: 1px solid rgba(82,183,136,0.4); border-radius: 5px; padding: 3px 10px; cursor: pointer; white-space: nowrap; }
+.signin-banner button:hover { background: var(--accent); color: #0a0b0f; }
+.signin-banner .dismiss { border: none; padding: 2px 6px; color: var(--text-tertiary); font-size: 14px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.25s ease; }
+.sidebar-header { padding: 16px 14px 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 6px; }
+.brand-name { font-family: 'DM Serif Display', serif; font-size: 20px; }
+.brand-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.icon-btn { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.15s; }
+.icon-btn:hover { background: var(--surface); color: var(--text-primary); }
+.icon-btn svg { width: 13px; height: 13px; }
+.section-label { padding: 12px 14px 5px; font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
+.chat-list { flex: 1; overflow-y: auto; padding: 0 6px; }
+.chat-list::-webkit-scrollbar { width: 2px; }
+.chat-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.chat-item { display: block; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: all 0.12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; margin-bottom: 1px; }
+.chat-item:hover, .chat-item.active { background: var(--surface); border-color: var(--border); color: var(--text-primary); }
+.sidebar-footer { padding: 8px 6px; border-top: 1px solid var(--border); }
+.user-row-footer { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; margin-bottom: 5px; }
+.user-avatar { width: 26px; height: 26px; border-radius: 7px; background: var(--accent-light); border: 1px solid rgba(82,183,136,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
+.user-email { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.signout-btn { font-size: 11px; color: var(--text-tertiary); background: transparent; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.signout-btn:hover { color: var(--text-primary); }
+.signin-sidebar-btn { width: 100%; padding: 8px; background: var(--accent); color: #0a0b0f; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 7px; transition: opacity 0.15s; }
+.signin-sidebar-btn:hover { opacity: 0.88; }
+.usage-wrap { padding: 4px 8px 8px; }
+.usage-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.usage-label { font-size: 10px; color: var(--text-secondary); }
+.usage-count { font-size: 10px; color: var(--text-tertiary); }
+.usage-bar { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.usage-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+.usage-fill.warn { background: #c97d2a; }
+.usage-fill.out { background: #e87979; }
+.upgrade-btn { display: none; width: 100%; padding: 8px; background: linear-gradient(135deg, var(--node-pink), var(--node-blue)); color: #fff; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; margin-top: 6px; }
+.upgrade-btn.show { display: block; }
+
+/* ── FEEDBACK BTN ── */
+.feedback-btn { display: flex; align-items: center; gap: 6px; width: calc(100% - 12px); margin: 0 6px 6px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; text-align: left; }
+.feedback-btn:hover { background: var(--surface); color: var(--text-secondary); }
+.feedback-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* ── MAIN AREA ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.topbar { display: none; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.topbar-brand { font-family: 'DM Serif Display', serif; font-size: 18px; }
+
+/* ── TABS (mobile) ── */
+.view-tabs { display: none; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.view-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 500; color: var(--text-tertiary); background: transparent; border: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.view-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── SPLIT VIEW ── */
+.split-view { flex: 1; display: flex; overflow: hidden; }
+
+/* ── CHAT PANEL ── */
+.chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border); min-width: 0; }
+.messages { flex: 1; overflow-y: auto; scroll-behavior: smooth; overscroll-behavior: contain; }
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 40px 24px; user-select: none; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 32px; letter-spacing: -0.3px; line-height: 1.2; text-align: center; }
+.empty-sub { font-size: 13px; color: var(--text-tertiary); text-align: center; max-width: 300px; line-height: 1.6; }
+.msg-row { padding: 8px 20px; animation: up 0.2s ease; display: flex; flex-direction: column; }
+@keyframes up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.neuxon-row { align-items: flex-start; }
+.neuxon-row .msg-sender { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.neuxon-row .msg-content { background: transparent; padding: 2px 0; max-width: 90%; font-size: 14px; line-height: 1.8; color: var(--text-primary); }
+.user-row { align-items: flex-end; }
+.user-row .msg-sender { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 4px; text-align: right; }
+.user-row .msg-content { background: var(--user-bubble); padding: 10px 14px; border-radius: 14px 3px 14px 14px; max-width: 80%; font-size: 14px; line-height: 1.75; color: var(--text-primary); display: block; }
+.msg-content p + p { margin-top: 8px; }
+.msg-content strong { font-weight: 600; color: var(--text-primary); }
+.msg-content em { font-style: italic; color: var(--text-secondary); }
+.msg-content ul, .msg-content ol { padding-left: 18px; margin: 8px 0; }
+.msg-content li { margin-bottom: 3px; }
+.msg-content code { font-family: monospace; font-size: 12px; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
+.msg-content blockquote { border-left: 2px solid var(--accent); padding-left: 10px; margin: 8px 0; color: var(--text-secondary); font-style: italic; }
+.typing-dots { display: flex; gap: 4px; align-items: center; padding: 3px 0; }
+.typing-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-tertiary); animation: blink 1.3s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity:0.3; transform:scale(1); } 40% { opacity:1; transform:scale(1.2); } }
+
+/* ── PAYWALL ── */
+.paywall { display: none; margin: 0 16px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; animation: up 0.3s ease; }
+.paywall.show { display: block; }
+.paywall-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; }
+.paywall-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+.plans { display: flex; gap: 10px; }
+.plan { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; }
+.plan:hover, .plan.featured { border-color: var(--accent); background: var(--accent-light); }
+.plan-label { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 7px; }
+.plan.featured .plan-label { color: var(--accent); }
+.plan-price { font-family: 'DM Serif Display', serif; font-size: 26px; }
+.plan-period { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.plan-note { font-size: 10px; color: var(--accent); font-weight: 500; margin-top: 4px; }
+
+/* ── PROFILE PROMPT (shown when credits run out) ── */
+.profile-prompt { display: none; margin: 0 16px 16px; background: linear-gradient(135deg, rgba(232,121,160,0.08), rgba(96,165,250,0.08)); border: 1px solid rgba(232,121,160,0.2); border-radius: 14px; padding: 24px; animation: up 0.3s ease; }
+.profile-prompt.show { display: block; }
+.profile-prompt-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; background: linear-gradient(135deg, var(--node-pink), var(--node-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.profile-prompt-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 18px; }
+.profile-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.profile-field input, .profile-field select, .profile-field textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg); outline: none; transition: border-color 0.15s; resize: none; }
+.profile-field input:focus, .profile-field select:focus, .profile-field textarea:focus { border-color: var(--node-pink); }
+.profile-field select option { background: var(--surface); }
+.profile-field label { display: block; font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+.profile-save-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, var(--node-pink), var(--node-blue)); color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 10px; transition: opacity 0.15s; }
+.profile-save-btn:hover { opacity: 0.9; }
+.profile-skip { width: 100%; padding: 8px; background: transparent; color: var(--text-tertiary); font-family: 'Inter', sans-serif; font-size: 12px; border: none; cursor: pointer; }
+.profile-skip:hover { color: var(--text-secondary); }
+
+/* ── INPUT AREA ── */
+.input-area { padding: 12px 16px 14px; flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border); }
+.input-area.blocked .input-box { opacity: 0.3; pointer-events: none; }
+.input-box { display: flex; align-items: flex-end; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px 8px 8px 14px; transition: border-color 0.18s; }
+.input-box:focus-within { border-color: rgba(255,255,255,0.15); }
+textarea { flex: 1; background: transparent; border: none; outline: none; resize: none; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-primary); line-height: 1.6; min-height: 22px; max-height: 160px; padding: 1px 0; }
+textarea::placeholder { color: var(--text-tertiary); }
+.send-btn { width: 30px; height: 30px; border-radius: 7px; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s, transform 0.1s; }
+.send-btn:hover { opacity: 0.8; }
+.send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { opacity: 0.15; cursor: not-allowed; transform: none; }
+.send-btn svg { width: 12px; height: 12px; stroke: #0a0b0f; fill: none; }
+.input-footer { margin-top: 6px; font-size: 10px; color: var(--text-tertiary); text-align: center; }
+
+/* ── MIND MAP PANEL ── */
+.mindmap-panel { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; position: relative; }
+.mindmap-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.mindmap-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); }
+.mindmap-subtitle { font-size: 10px; color: var(--text-tertiary); }
+.mindmap-canvas { flex: 1; position: relative; overflow: hidden; }
+.mindmap-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; pointer-events: none; }
+.mindmap-empty-icon { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+.mindmap-empty-icon svg { width: 22px; height: 22px; }
+.mindmap-empty-title { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.mindmap-empty-sub { font-size: 11px; color: var(--text-tertiary); line-height: 1.5; max-width: 200px; }
+
+/* SVG canvas */
+#mindmap-svg { width: 100%; height: 100%; position: absolute; inset: 0; }
+
+/* Nodes */
+.mn-node { cursor: pointer; transition: transform 0.2s; }
+.mn-node:hover { transform: scale(1.05); }
+.mn-node-circle { transition: all 0.3s; }
+.mn-node-text { font-family: 'Inter', sans-serif; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
+.mn-node-sub { font-family: 'Inter', sans-serif; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
+
+/* Node detail popup */
+.node-detail { display: none; position: absolute; bottom: 16px; left: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; animation: up 0.2s ease; z-index: 10; max-height: 200px; overflow-y: auto; }
+.node-detail.show { display: block; }
+.node-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.node-detail-title { font-size: 13px; font-weight: 600; }
+.node-detail-close { background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 16px; padding: 0; }
+.node-detail-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.node-detail-source { margin-top: 8px; font-size: 10px; color: var(--text-tertiary); font-style: italic; }
+
+/* Node colors */
+.node-pink .mn-node-circle { fill: rgba(232,121,160,0.12); stroke: var(--node-pink); stroke-width: 1.5; }
+.node-pink .mn-node-text { fill: var(--node-pink); font-size: 11px; font-weight: 600; }
+.node-pink .mn-node-sub { fill: rgba(232,121,160,0.6); font-size: 9px; }
+.node-blue .mn-node-circle { fill: rgba(96,165,250,0.12); stroke: var(--node-blue); stroke-width: 1.5; }
+.node-blue .mn-node-text { fill: var(--node-blue); font-size: 11px; font-weight: 600; }
+.node-blue .mn-node-sub { fill: rgba(96,165,250,0.6); font-size: 9px; }
+.node-center .mn-node-circle { fill: rgba(82,183,136,0.12); stroke: var(--accent); stroke-width: 2; }
+.node-center .mn-node-text { fill: var(--accent); font-size: 12px; font-weight: 600; }
+
+/* Connections */
+.mn-connection { stroke-width: 1; opacity: 0.4; fill: none; stroke-dasharray: 4 3; animation: dash 20s linear infinite; }
+.mn-connection.pink { stroke: var(--node-pink); }
+.mn-connection.blue { stroke: var(--node-blue); }
+@keyframes dash { to { stroke-dashoffset: -100; } }
+
+/* Pulse animation for new nodes */
+@keyframes nodePulse { 0% { r: 0; opacity: 0; } 60% { opacity: 1; } 100% { opacity: 1; } }
+.mn-node-new .mn-node-circle { animation: nodePulse 0.4s ease forwards; }
+
+/* ── FEEDBACK SCREEN ── */
+.feedback-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 100; flex-direction: column; }
+.feedback-screen.open { display: flex; }
+.feedback-screen-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; padding: 6px 10px; border-radius: 7px; transition: all 0.15s; }
+.back-btn:hover { color: var(--text-primary); background: var(--surface); }
+.back-btn svg { width: 13px; height: 13px; }
+.feedback-screen-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+.feedback-screen-body { flex: 1; overflow-y: auto; padding: 28px max(20px, calc(50% - 300px)); display: flex; flex-direction: column; gap: 20px; }
+.feedback-block-label { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 10px; }
+.stars-row { display: flex; gap: 7px; margin-bottom: 4px; }
+.star-btn { width: 42px; height: 42px; border: 1px solid var(--border); background: var(--surface); border-radius: 9px; cursor: pointer; font-size: 20px; transition: all 0.15s; color: var(--text-tertiary); display: flex; align-items: center; justify-content: center; }
+.star-btn:hover, .star-btn.active { color: #f0a05a; border-color: #f0a05a; background: rgba(240,160,90,0.08); }
+.feedback-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); line-height: 1.6; resize: none; outline: none; min-height: 90px; }
+.feedback-textarea:focus { border-color: var(--border-hover); }
+.feedback-textarea::placeholder { color: var(--text-tertiary); }
+.feedback-submit { padding: 9px 20px; background: var(--accent); color: #0a0b0f; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; align-self: flex-start; }
+.feedback-entries { display: flex; flex-direction: column; gap: 8px; }
+.feedback-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; }
+.feedback-entry-stars { font-size: 12px; color: #f0a05a; margin-bottom: 4px; }
+.feedback-entry-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.feedback-entry-time { font-size: 10px; color: var(--text-tertiary); margin-top: 4px; }
+.feedback-empty { font-size: 12px; color: var(--text-tertiary); text-align: center; padding: 16px 0; }
+
+/* ── SITE FOOTER ── */
+.site-footer { padding: 8px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 16px; flex-shrink: 0; }
+.site-footer a { font-size: 10px; color: var(--text-tertiary); text-decoration: none; }
+.site-footer a:hover { color: var(--text-secondary); }
+
+/* ── OVERLAY ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 15; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .mindmap-panel { width: 100%; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 5; transform: translateX(100%); transition: transform 0.3s ease; }
+  .mindmap-panel.mobile-show { transform: translateX(0); }
+  .view-tabs { display: flex; position: relative; z-index: 10; }
+  .split-view { position: relative; }
+  .chat-panel { border-right: none; width: 100%; }
+}
+@media (max-width: 640px) {
+  .sidebar { position: fixed; top:0; left:0; bottom:0; z-index: 20; transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .overlay.open { display: block; }
+  .topbar { display: flex; }
+  .empty-title { font-size: 26px; }
+  .mindmap-panel { width: 100%; }
+}
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PWZKTP39" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="auth-logo">Neuxon AI</div>
+    <div class="auth-sub" id="auth-sub-text">Sign in so Neuxon AI can remember you and build your cognitive map over time</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('signin')" id="tab-si">Sign in</button>
+      <button class="auth-tab" onclick="switchTab('signup')" id="tab-su">Sign up</button>
+    </div>
+    <div id="tab-signin">
+      <div class="auth-field"><label>Email</label><input type="email" id="si-email" placeholder="you@email.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="si-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')signIn()"></div>
+      <button class="auth-btn" onclick="signIn()">Sign in</button>
+      <div class="auth-divider"><span>or continue with</span></div>
+      <button class="social-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <button class="social-btn" onclick="signInApple()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Continue with Apple
+      </button>
+      <div class="auth-error" id="si-error"></div>
+    </div>
+    <div id="tab-signup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="su-email" placeholder="you@email.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="su-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')signUp()"></div>
+      <button class="auth-btn" onclick="signUp()">Create account</button>
+      <div class="auth-divider"><span>or continue with</span></div>
+      <button class="social-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-error" id="su-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand"><span class="brand-name">Neuxon</span><div class="brand-dot"></div></div>
+      <button class="icon-btn" onclick="newChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="section-label" id="label-conversations">Conversations</div>
+    <div class="chat-list" id="chat-list">
+      <div class="chat-item active" id="cur-item">New conversation</div>
+    </div>
+    <div class="sidebar-footer">
+      <div id="user-logged-section" style="display:none">
+        <div class="user-row-footer">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-email" id="user-email-display">—</div>
+          <button class="signout-btn" id="signout-btn" onclick="signOut()">Sign out</button>
+        </div>
+      </div>
+      <div id="user-guest-section">
+        <button class="signin-sidebar-btn" id="signin-sidebar-btn" onclick="openModal()">Sign in / Sign up</button>
+      </div>
+      <div class="usage-wrap">
+        <div class="usage-row">
+          <span class="usage-label" id="label-free-messages">Free messages</span>
+          <span class="usage-count" id="uc">— / 8</span>
+        </div>
+        <div class="usage-bar"><div class="usage-fill" id="uf" style="width:100%"></div></div>
+      </div>
+      <button class="upgrade-btn" id="upbtn" onclick="showPaywall()">Upgrade to Pro</button>
+      <button class="feedback-btn" id="feedback-btn" onclick="openFeedback()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span id="feedback-btn-label">Give feedback</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Top bar (mobile) -->
+    <div class="topbar" id="topbar">
+      <button class="icon-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <span class="topbar-brand">Neuxon AI</span>
+      <div style="width:28px"></div>
+    </div>
+
+    <!-- Sign in banner -->
+    <div class="signin-banner" id="signin-banner">
+      <span id="banner-text">Sign in so Neuxon AI can remember you and build your cognitive map</span>
+      <button onclick="openModal()" id="banner-btn">Sign in</button>
+      <button class="dismiss" onclick="g('signin-banner').style.display='none'">×</button>
+    </div>
+
+    <!-- View tabs (mobile) -->
+    <div class="view-tabs" id="view-tabs">
+      <button class="view-tab active" id="tab-chat" onclick="switchView('chat')">Chat</button>
+      <button class="view-tab" id="tab-map" onclick="switchView('map')">Cognitive Map</button>
+    </div>
+
+    <!-- Split view -->
+    <div class="split-view">
+      <!-- Chat panel -->
+      <div class="chat-panel" id="chat-panel">
+        <div class="messages" id="messages">
+          <div class="empty-state" id="empty">
+            <div class="empty-title" id="empty-title">What's on your mind?</div>
+            <div class="empty-sub" id="empty-sub">Tell me about your day or a pattern you want to understand. I'll map what I find.</div>
+          </div>
+        </div>
+
+        <!-- Profile prompt (shown when credits run out) -->
+        <div class="profile-prompt" id="profile-prompt">
+          <div class="profile-prompt-title" id="pp-title">Help me know you better</div>
+          <div class="profile-prompt-sub" id="pp-sub">Create a profile so Neuxon AI can map your patterns more accurately — and unlock more messages.</div>
+          <div class="profile-fields">
+            <div class="profile-field"><label id="pp-name-label">Your name</label><input type="text" id="pp-name" placeholder="How should I call you?"></div>
+            <div class="profile-field"><label id="pp-goal-label">Main area you want to work on</label>
+              <select id="pp-goal">
+                <option value="">Select...</option>
+                <option value="procrastination">Procrastination & focus</option>
+                <option value="anxiety">Anxiety & stress</option>
+                <option value="sleep">Sleep & energy</option>
+                <option value="relationships">Relationships & emotions</option>
+                <option value="habits">Habits & consistency</option>
+                <option value="trauma">Understanding past patterns</option>
+                <option value="performance">Professional performance</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="profile-field"><label id="pp-specialist-label">Are you currently working with a therapist or specialist?</label>
+              <select id="pp-specialist">
+                <option value="">Select...</option>
+                <option value="yes">Yes — I have professional support</option>
+                <option value="no">No — not currently</option>
+                <option value="considering">I'm considering it</option>
+              </select>
+            </div>
+            <div class="profile-field"><label id="pp-context-label">Anything else I should know? (optional)</label><textarea id="pp-context" rows="2" placeholder="What have you already tried? What keeps blocking you?"></textarea></div>
+          </div>
+          <button class="profile-save-btn" id="pp-save-btn" onclick="saveProfileAndContinue()">Save and continue</button>
+          <button class="profile-skip" id="pp-skip-btn" onclick="skipProfilePrompt()">Skip for now</button>
+        </div>
+
+        <!-- Paywall -->
+        <div class="paywall" id="paywall">
+          <div class="paywall-title" id="paywall-title">Continue with Neuxon AI</div>
+          <div class="paywall-sub" id="paywall-sub">You have used all your free messages. Upgrade to keep building your cognitive map.</div>
+          <div class="plans">
+            <div class="plan featured" onclick="handleUpgrade('monthly')">
+              <div class="plan-label" id="plan-label-monthly">Monthly</div>
+              <div class="plan-price">$39</div>
+              <div class="plan-period" id="plan-period-monthly">per month</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-area" id="input-area">
+          <div class="input-box">
+            <textarea id="inp" placeholder="Tell me what happened today..." rows="1" onkeydown="onKey(event)" oninput="onInput(this)"></textarea>
+            <button class="send-btn" id="sbtn" disabled onclick="send()">
+              <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div class="input-footer" id="input-footer">Neuxon AI is a complement, not a substitute for professional mental health care.</div>
+        </div>
+
+        <footer class="site-footer">
+          <a href="/terms.html">Terms</a>
+          <a href="/privacy.html">Privacy</a>
+        </footer>
+      </div>
+
+      <!-- Mind map panel -->
+      <div class="mindmap-panel" id="mindmap-panel">
+        <div class="mindmap-header">
+          <span class="mindmap-title" id="mm-title">Cognitive Map</span>
+          <span class="mindmap-subtitle" id="mm-subtitle">Updates as we talk</span>
+        </div>
+        <div class="mindmap-canvas" id="mindmap-canvas">
+          <div class="mindmap-empty" id="mindmap-empty">
+            <div class="mindmap-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>
+            </div>
+            <div class="mindmap-empty-title" id="mm-empty-title">Your map is empty</div>
+            <div class="mindmap-empty-sub" id="mm-empty-sub">As you share more, I'll identify patterns and connect them here.</div>
+          </div>
+          <svg id="mindmap-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="node-detail" id="node-detail">
+          <div class="node-detail-header">
+            <span class="node-detail-title" id="nd-title"></span>
+            <button class="node-detail-close" onclick="closeNodeDetail()">×</button>
+          </div>
+          <div class="node-detail-body" id="nd-body"></div>
+          <div class="node-detail-source" id="nd-source"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Feedback screen -->
+<div class="feedback-screen" id="feedback-screen">
+  <div class="feedback-screen-header">
+    <button class="back-btn" id="back-btn" onclick="closeFeedback()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      <span id="back-label">Back to chat</span>
+    </button>
+    <span class="feedback-screen-title" id="fp-screen-title">Feedback</span>
+  </div>
+  <div class="feedback-screen-body">
+    <div>
+      <div class="feedback-block-label" id="fp-rating-label">How would you rate Neuxon AI?</div>
+      <div class="stars-row" id="stars-row">
+        <button class="star-btn" onclick="setStar(1)">★</button>
+        <button class="star-btn" onclick="setStar(2)">★</button>
+        <button class="star-btn" onclick="setStar(3)">★</button>
+        <button class="star-btn" onclick="setStar(4)">★</button>
+        <button class="star-btn" onclick="setStar(5)">★</button>
+      </div>
+    </div>
+    <div>
+      <div class="feedback-block-label" id="fp-comment-label">What could be better?</div>
+      <textarea class="feedback-textarea" id="feedback-text" placeholder="Tell us what you think..."></textarea>
+    </div>
+    <button class="feedback-submit" id="fp-submit-btn" onclick="submitFeedback()">Send feedback</button>
+    <div>
+      <div class="feedback-block-label" id="fp-history-label">Previous feedback</div>
+      <div class="feedback-entries" id="feedback-entries">
+        <div class="feedback-empty" id="fp-empty">No feedback yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<script>
+const SUPABASE_URL = 'https://hpdiwucsrsybzuotdpjy.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZGl3dWNzcnN5Ynp1b3RkcGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzEyMDgsImV4cCI6MjA5Mjc0NzIwOH0.yRuNkfFFcVcDjlulMkDQ3YT93BBokHfHW-9ZMGrN_cg'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const FREE_LIMIT = 8
+const API_URL = 'https://neuxon-backend-production.up.railway.app'
+const g = id => document.getElementById(id)
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────────────────
+const T = {
+  en: {
+    emptyTitle: "What's on your mind?",
+    emptySub: "Tell me about your day or a pattern you want to understand. I'll map what I find.",
+    placeholder: "Tell me what happened today...",
+    disclaimer: "Neuxon AI is a complement, not a substitute for professional mental health care.",
+    banner: "Sign in so Neuxon AI can remember you and build your cognitive map",
+    signIn: "Sign in", signUp: "Sign up", signOut: "Sign out",
+    conversations: "Conversations", freeMessages: "Free messages",
+    upgrade: "Upgrade to Pro", newConv: "New conversation", you: "You",
+    pwTitle: "Continue with Neuxon AI",
+    pwSub: "You have used all your free messages. Upgrade to keep building your cognitive map.",
+    monthly: "Monthly", perMonth: "per month",
+    ppTitle: "Help me know you better",
+    ppSub: "Create a profile so Neuxon AI can map your patterns more accurately — and unlock more messages.",
+    ppName: "Your name", ppGoal: "Main area you want to work on", ppContext: "Anything else I should know? (optional)",
+    ppSave: "Save and continue", ppSkip: "Skip for now",
+    mmTitle: "Cognitive Map", mmSub: "Updates as we talk",
+    mmEmptyTitle: "Your map is empty", mmEmptySub: "As you share more, I'll identify patterns and connect them here.",
+    tabChat: "Chat", tabMap: "Cognitive Map",
+    couldNotConnect: "Could not connect. Please check your connection and try again.",
+    errorOccurred: "An error occurred. Please try again.",
+    fillFields: "Please fill in all fields.", passwordMin: "Password must be at least 8 characters.",
+    checkEmail: "Check your email to confirm your account.",
+    feedbackBtn: "Give feedback", backToChat: "Back to chat", feedbackTitle: "Feedback",
+    fpRating: "How would you rate Neuxon AI?", fpComment: "What could be better?",
+    fpPlaceholder: "Tell us what you think...", fpSubmit: "Send feedback",
+    fpHistory: "Previous feedback", fpEmpty: "No feedback yet.",
+  },
+  pt: {
+    emptyTitle: "O que está na sua mente?",
+    emptySub: "Me conta sobre o seu dia ou um padrão que quer entender. Vou mapear o que encontrar.",
+    placeholder: "Me conta o que aconteceu hoje...",
+    disclaimer: "Neuxon AI é um complemento, não substitui acompanhamento profissional de saúde mental.",
+    banner: "Entre para que a Neuxon AI possa lembrar de você e construir seu mapa cognitivo",
+    signIn: "Entrar", signUp: "Cadastrar", signOut: "Sair",
+    conversations: "Conversas", freeMessages: "Mensagens grátis",
+    upgrade: "Fazer upgrade", newConv: "Nova conversa", you: "Você",
+    pwTitle: "Continue com a Neuxon AI",
+    pwSub: "Você usou todas as mensagens gratuitas. Faça upgrade para continuar construindo seu mapa cognitivo.",
+    monthly: "Mensal", perMonth: "por mês",
+    ppTitle: "Me ajude a conhecer você melhor",
+    ppSub: "Crie um perfil para que a Neuxon AI possa mapear seus padrões com mais precisão — e desbloquear mais mensagens.",
+    ppName: "Seu nome", ppGoal: "Área principal que quer trabalhar", ppContext: "Mais alguma coisa que eu deva saber? (opcional)",
+    ppSave: "Salvar e continuar", ppSkip: "Pular por agora",
+    mmTitle: "Mapa Cognitivo", mmSub: "Atualiza conforme conversamos",
+    mmEmptyTitle: "Seu mapa está vazio", mmEmptySub: "Conforme você compartilhar mais, vou identificar padrões e conectá-los aqui.",
+    tabChat: "Chat", tabMap: "Mapa Cognitivo",
+    couldNotConnect: "Não foi possível conectar. Verifique sua conexão e tente novamente.",
+    errorOccurred: "Ocorreu um erro. Tente novamente.",
+    fillFields: "Por favor, preencha todos os campos.", passwordMin: "A senha deve ter pelo menos 8 caracteres.",
+    checkEmail: "Verifique seu e-mail para confirmar sua conta.",
+    feedbackBtn: "Deixar feedback", backToChat: "Voltar ao chat", feedbackTitle: "Feedback",
+    fpRating: "Como você avalia a Neuxon AI?", fpComment: "O que poderia ser melhor?",
+    fpPlaceholder: "Nos diga o que você pensa...", fpSubmit: "Enviar feedback",
+    fpHistory: "Feedbacks anteriores", fpEmpty: "Nenhum feedback ainda.",
+  },
+  es: {
+    emptyTitle: "¿Qué tienes en mente?",
+    emptySub: "Cuéntame sobre tu día o un patrón que quieras entender. Voy a mapearlo.",
+    placeholder: "Cuéntame qué pasó hoy...",
+    disclaimer: "Neuxon AI es un complemento, no sustituye la atención profesional de salud mental.",
+    banner: "Inicia sesión para que Neuxon AI pueda recordarte y construir tu mapa cognitivo",
+    signIn: "Iniciar sesión", signUp: "Registrarse", signOut: "Cerrar sesión",
+    conversations: "Conversaciones", freeMessages: "Mensajes gratuitos",
+    upgrade: "Mejorar a Pro", newConv: "Nueva conversación", you: "Tú",
+    pwTitle: "Continúa con Neuxon AI",
+    pwSub: "Has usado todos tus mensajes gratuitos. Mejora para seguir construyendo tu mapa cognitivo.",
+    monthly: "Mensual", perMonth: "por mes",
+    ppTitle: "Ayúdame a conocerte mejor",
+    ppSub: "Crea un perfil para que Neuxon AI pueda mapear tus patrones con más precisión.",
+    ppName: "Tu nombre", ppGoal: "Área principal en la que quieres trabajar", ppContext: "¿Algo más que deba saber? (opcional)",
+    ppSave: "Guardar y continuar", ppSkip: "Saltar por ahora",
+    mmTitle: "Mapa Cognitivo", mmSub: "Se actualiza mientras hablamos",
+    mmEmptyTitle: "Tu mapa está vacío", mmEmptySub: "A medida que compartas más, identificaré patrones y los conectaré aquí.",
+    tabChat: "Chat", tabMap: "Mapa Cognitivo",
+    couldNotConnect: "No se pudo conectar. Verifica tu conexión.",
+    errorOccurred: "Ocurrió un error. Inténtalo de nuevo.",
+    fillFields: "Por favor, completa todos los campos.", passwordMin: "La contraseña debe tener al menos 8 caracteres.",
+    checkEmail: "Revisa tu correo para confirmar tu cuenta.",
+    feedbackBtn: "Dar feedback", backToChat: "Volver al chat", feedbackTitle: "Feedback",
+    fpRating: "¿Cómo calificarías Neuxon AI?", fpComment: "¿Qué podría mejorar?",
+    fpPlaceholder: "Cuéntanos qué piensas...", fpSubmit: "Enviar feedback",
+    fpHistory: "Feedback anterior", fpEmpty: "Sin feedback aún.",
+  }
+}
+
+let currentLang = 'en'
+
+function detectLanguage(text) {
+  const pt = /[áàâãéêíóôõúüç]|\b(como|para|você|não|que|uma|por|isso|com|mais|mas|seu|sua|tem|são|está|fazer|posso|tenho|minha|muito|também|quando|sobre|vou|pode|preciso|aqui|quero|estou)\b/i
+  const es = /[¿¡ñ]|\b(cómo|para|usted|no|qué|una|por|eso|con|más|pero|su|tiene|son|está|hacer|puedo|tengo|muy|también|cuando|sobre|voy|puede|necesito|aquí|quiero)\b/i
+  if (pt.test(text)) return 'pt'
+  if (es.test(text)) return 'es'
+  return 'en'
+}
+
+function applyLanguage(lang) {
+  currentLang = lang
+  const t = T[lang] || T.en
+  const set = (id, val) => { const el = g(id); if (el) el.textContent = val }
+  const setPlaceholder = (id, val) => { const el = g(id); if (el) el.placeholder = val }
+
+  set('empty-title', t.emptyTitle); set('empty-sub', t.emptySub)
+  setPlaceholder('inp', t.placeholder)
+  set('input-footer', t.disclaimer)
+  set('banner-text', t.banner); set('banner-btn', t.signIn)
+  set('label-conversations', t.conversations)
+  set('label-free-messages', t.freeMessages)
+  set('upbtn', t.upgrade)
+  set('signout-btn', t.signOut)
+  set('signin-sidebar-btn', t.signIn + ' / ' + t.signUp)
+  set('paywall-title', t.pwTitle); set('paywall-sub', t.pwSub)
+  set('plan-label-monthly', t.monthly); set('plan-period-monthly', t.perMonth)
+  set('pp-title', t.ppTitle); set('pp-sub', t.ppSub)
+  set('pp-name-label', t.ppName); set('pp-goal-label', t.ppGoal); set('pp-context-label', t.ppContext)
+  set('pp-save-btn', t.ppSave); set('pp-skip-btn', t.ppSkip)
+  set('mm-title', t.mmTitle); set('mm-subtitle', t.mmSub)
+  set('mm-empty-title', t.mmEmptyTitle); set('mm-empty-sub', t.mmEmptySub)
+  set('tab-chat', t.tabChat); set('tab-map', t.tabMap)
+  set('feedback-btn-label', t.feedbackBtn)
+  set('back-label', t.backToChat); set('fp-screen-title', t.feedbackTitle)
+  set('fp-rating-label', t.fpRating); set('fp-comment-label', t.fpComment)
+  setPlaceholder('feedback-text', t.fpPlaceholder)
+  set('fp-submit-btn', t.fpSubmit); set('fp-history-label', t.fpHistory)
+  set('fp-empty', t.fpEmpty)
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let history = [], currentChatId = null, busy = false, remaining = 8, currentUser = null
+let userProfile = JSON.parse(localStorage.getItem('neuxon_profile') || '{}')
+let mindMapNodes = JSON.parse(localStorage.getItem('neuxon_map') || '[]')
+
+function saveProfile(updates) {
+  userProfile = { ...userProfile, ...updates }
+  localStorage.setItem('neuxon_profile', JSON.stringify(userProfile))
+}
+
+function buildMemoryContext() {
+  const convs = getLocalConversations()
+  return {
+    ...userProfile,
+    conversationCount: convs.length,
+    hasPreviousConversations: convs.length > 0,
+    mindMapNodes: mindMapNodes.map(n => ({ label: n.label, type: n.type }))
+  }
+}
+
+// ── MOBILE VIEW ───────────────────────────────────────────────────────────────
+function switchView(view) {
+  const mapPanel = g('mindmap-panel')
+  const chatTab = g('tab-chat')
+  const mapTab = g('tab-map')
+  const splitView = document.querySelector('.split-view')
+  if (view === 'map') {
+    mapPanel.classList.add('mobile-show')
+    mapTab.classList.add('active')
+    chatTab.classList.remove('active')
+    if (splitView) splitView.style.position = 'relative'
+  } else {
+    mapPanel.classList.remove('mobile-show')
+    chatTab.classList.add('active')
+    mapTab.classList.remove('active')
+  }
+}
+
+// ── MIND MAP ──────────────────────────────────────────────────────────────────
+const MM_COLORS = ['pink', 'blue', 'pink', 'blue', 'pink', 'blue', 'pink', 'blue']
+
+function saveMindMap() {
+  localStorage.setItem('neuxon_map', JSON.stringify(mindMapNodes))
+}
+
+function addMindMapNode(label, type, detail, source) {
+  const exists = mindMapNodes.find(n => n.label.toLowerCase() === label.toLowerCase())
+  if (exists) return
+  mindMapNodes.push({ id: Date.now(), label, type: type || 'blue', detail: detail || '', source: source || '', color: MM_COLORS[mindMapNodes.length % MM_COLORS.length] })
+  saveMindMap()
+  renderMindMap()
+}
+
+function renderMindMap() {
+  const svg = g('mindmap-svg')
+  const canvas = g('mindmap-canvas')
+  const empty = g('mindmap-empty')
+  if (!svg || !canvas) return
+
+  svg.innerHTML = ''
+
+  if (mindMapNodes.length === 0) {
+    if (empty) empty.style.display = 'flex'
+    return
+  }
+  if (empty) empty.style.display = 'none'
+
+  const W = canvas.clientWidth || 420
+  const H = canvas.clientHeight || 400
+  const cx = W / 2
+  const cy = H / 2
+
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+  // Pink glow filter
+  const filterPink = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+  filterPink.setAttribute('id', 'glow-pink')
+  const fePink = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
+  fePink.setAttribute('stdDeviation', '3'); fePink.setAttribute('result', 'blur')
+  filterPink.appendChild(fePink)
+  defs.appendChild(filterPink)
+  // Blue glow filter
+  const filterBlue = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+  filterBlue.setAttribute('id', 'glow-blue')
+  const feBlue = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
+  feBlue.setAttribute('stdDeviation', '3'); feBlue.setAttribute('result', 'blur')
+  filterBlue.appendChild(feBlue)
+  defs.appendChild(filterBlue)
+  svg.appendChild(defs)
+
+  // Draw center node (user)
+  const centerLabel = userProfile.name || 'You'
+  drawNode(svg, cx, cy, centerLabel, 'center', null, null, true)
+
+  // Draw surrounding nodes
+  const total = mindMapNodes.length
+  const radius = Math.min(W, H) * 0.35
+  const angleStep = (2 * Math.PI) / total
+
+  mindMapNodes.forEach((node, i) => {
+    const angle = i * angleStep - Math.PI / 2
+    const nx = cx + radius * Math.cos(angle)
+    const ny = cy + radius * Math.sin(angle)
+
+    // Draw connection line
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    const d = `M ${cx} ${cy} Q ${(cx + nx) / 2 + (Math.random() - 0.5) * 30} ${(cy + ny) / 2 + (Math.random() - 0.5) * 30} ${nx} ${ny}`
+    line.setAttribute('d', d)
+    line.setAttribute('class', `mn-connection ${node.color}`)
+    svg.appendChild(line)
+
+    // Draw node
+    drawNode(svg, nx, ny, node.label, node.color, node, i)
+  })
+}
+
+function drawNode(svg, x, y, label, color, nodeData, index, isCenter) {
+  const r = isCenter ? 32 : 28
+  const g_el = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  g_el.setAttribute('class', `mn-node node-${color}${index !== null ? ' mn-node-new' : ''}`)
+  g_el.setAttribute('transform', `translate(${x},${y})`)
+  if (nodeData) {
+    g_el.style.cursor = 'pointer'
+    g_el.addEventListener('click', () => showNodeDetail(nodeData))
+  }
+
+  // Glow circle behind
+  if (!isCenter) {
+    const glowCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    glowCircle.setAttribute('r', r + 8)
+    glowCircle.setAttribute('fill', color === 'pink' ? 'rgba(232,121,160,0.08)' : 'rgba(96,165,250,0.08)')
+    g_el.appendChild(glowCircle)
+  }
+
+  // Main circle
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+  circle.setAttribute('r', r)
+  circle.setAttribute('class', 'mn-node-circle')
+  g_el.appendChild(circle)
+
+  // Label — wrap if needed
+  const words = label.split(' ')
+  if (words.length <= 2 || isCenter) {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text.setAttribute('class', 'mn-node-text')
+    text.setAttribute('y', words.length > 1 ? -6 : 0)
+    text.textContent = words[0]
+    g_el.appendChild(text)
+    if (words.length > 1) {
+      const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text2.setAttribute('class', 'mn-node-text')
+      text2.setAttribute('y', 8)
+      text2.textContent = words.slice(1).join(' ')
+      g_el.appendChild(text2)
+    }
+  } else {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text.setAttribute('class', 'mn-node-text')
+    text.setAttribute('y', -7)
+    text.textContent = words[0]
+    g_el.appendChild(text)
+    const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text2.setAttribute('class', 'mn-node-text')
+    text2.setAttribute('y', 5)
+    text2.textContent = words[1]
+    g_el.appendChild(text2)
+    if (words[2]) {
+      const text3 = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text3.setAttribute('class', 'mn-node-sub')
+      text3.setAttribute('y', 17)
+      text3.textContent = '...'
+      g_el.appendChild(text3)
+    }
+  }
+
+  svg.appendChild(g_el)
+}
+
+function showNodeDetail(node) {
+  const detail = g('node-detail')
+  g('nd-title').textContent = node.label
+  g('nd-body').textContent = node.detail || 'Pattern identified during your conversation.'
+  g('nd-source').textContent = node.source ? 'Source: ' + node.source : ''
+  detail.classList.add('show')
+}
+
+function closeNodeDetail() { g('node-detail').classList.remove('show') }
+
+// Extract mind map nodes from AI response
+function extractNodesFromResponse(text) {
+  // Look for patterns like **Pattern: X**, **Bloqueio: X**, **Block: X**
+  const patterns = [
+    /\*\*(?:Pattern|Padrão|Bloqueo|Bloqueio|Block|Trigger|Gatilho):\s*([^*]+)\*\*/gi,
+    /(?:identified|identifiquei|identified pattern|padrão identificado):\s*([^\n.]+)/gi,
+    /\[node:\s*([^\]]+)\]/gi
+  ]
+
+  patterns.forEach(regex => {
+    let match
+    while ((match = regex.exec(text)) !== null) {
+      const label = match[1].trim().slice(0, 30)
+      if (label.length > 3) {
+        addMindMapNode(label, null, text.slice(0, 200), '')
+      }
+    }
+  })
+}
+
+// ── NODE DETAIL ───────────────────────────────────────────────────────────────
+function showNodeDetail(node) {
+  const detail = g('node-detail')
+  g('nd-title').textContent = node.label
+  g('nd-body').textContent = node.detail || 'Pattern identified during your conversation.'
+  g('nd-source').textContent = node.source ? 'Source: ' + node.source : ''
+  detail.classList.add('show')
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function openModal() { g('modal').classList.add('open') }
+function closeModal() { g('modal').classList.remove('open') }
+g('modal').addEventListener('click', e => { if (e.target === g('modal')) closeModal() })
+
+function switchTab(tab) {
+  g('tab-signin').style.display = tab === 'signin' ? 'block' : 'none'
+  g('tab-signup').style.display = tab === 'signup' ? 'block' : 'none'
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='signin'&&i===0)||(tab==='signup'&&i===1)))
+}
+
+async function signIn() {
+  const email = g('si-email').value.trim(), password = g('si-password').value
+  g('si-error').textContent = ''
+  if (!email || !password) { g('si-error').textContent = T[currentLang].fillFields; return }
+  const { error } = await sb.auth.signInWithPassword({ email, password })
+  if (error) g('si-error').textContent = error.message
+  else closeModal()
+}
+
+async function signUp() {
+  const email = g('su-email').value.trim(), password = g('su-password').value
+  g('su-error').textContent = ''
+  if (!email || !password) { g('su-error').textContent = T[currentLang].fillFields; return }
+  if (password.length < 8) { g('su-error').textContent = T[currentLang].passwordMin; return }
+  const { error } = await sb.auth.signUp({ email, password })
+  if (error) g('su-error').textContent = error.message
+  else { g('su-error').style.color = '#52b788'; g('su-error').textContent = T[currentLang].checkEmail }
+}
+
+async function signInGoogle() { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } }) }
+async function signInApple() { await sb.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: window.location.href } }) }
+
+async function signOut() {
+  await sb.auth.signOut()
+  currentUser = null
+  g('user-logged-section').style.display = 'none'
+  g('user-guest-section').style.display = 'block'
+  g('signin-banner').style.display = 'flex'
+  remaining = FREE_LIMIT
+  updateUsageUI()
+}
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user
+    closeModal()
+    g('user-logged-section').style.display = 'block'
+    g('user-guest-section').style.display = 'none'
+    g('signin-banner').style.display = 'none'
+    const email = currentUser.email || ''
+    g('user-email-display').textContent = email
+    g('user-avatar').textContent = email.charAt(0).toUpperCase()
+    await loadUsageFromDB()
+    await loadChatHistory()
+  }
+})
+
+// ── USAGE ─────────────────────────────────────────────────────────────────────
+const TIERS = [
+  { limit: 8, wait: 2 * 60 * 60 * 1000 },
+  { limit: 4, wait: 2 * 60 * 60 * 1000 },
+  { limit: 2, wait: null },
+]
+
+function getUsageState() {
+  const today = new Date().toISOString().split('T')[0]
+  const raw = JSON.parse(localStorage.getItem('neuxon_usage_v2') || '{}')
+  if (raw.date !== today) {
+    const fresh = { date: today, tier: 0, used: 0, blockedAt: null }
+    localStorage.setItem('neuxon_usage_v2', JSON.stringify(fresh))
+    return fresh
+  }
+  return raw
+}
+
+function saveUsageState(state) { localStorage.setItem('neuxon_usage_v2', JSON.stringify(state)) }
+
+function getRemainingInTier(state) {
+  const tier = TIERS[state.tier]
+  if (!tier) return 0
+  return Math.max(0, tier.limit - state.used)
+}
+
+function isBlocked(state) {
+  if (!state.blockedAt) return false
+  const tier = TIERS[state.tier]
+  if (!tier) return true
+  if (tier.wait === null) { const midnight = new Date(); midnight.setHours(24,0,0,0); return Date.now() < midnight.getTime() }
+  return Date.now() < state.blockedAt + tier.wait
+}
+
+function getUnblockTime(state) {
+  if (!state.blockedAt) return null
+  const tier = TIERS[state.tier]
+  if (!tier) return null
+  if (tier.wait === null) { const midnight = new Date(); midnight.setHours(24,0,0,0); return midnight.getTime() }
+  return state.blockedAt + tier.wait
+}
+
+function tryAdvanceTier(state) {
+  if (!isBlocked(state)) return state
+  const unblock = getUnblockTime(state)
+  if (unblock && Date.now() >= unblock) {
+    const nextTier = state.tier + 1
+    if (nextTier < TIERS.length) { state.tier = nextTier; state.used = 0; state.blockedAt = null; saveUsageState(state) }
+  }
+  return state
+}
+
+let countdownInterval = null
+
+function startCountdown(unblockTime) {
+  if (countdownInterval) clearInterval(countdownInterval)
+  countdownInterval = setInterval(() => {
+    const state = tryAdvanceTier(getUsageState())
+    if (!isBlocked(state)) {
+      clearInterval(countdownInterval)
+      remaining = getRemainingInTier(state)
+      updateUsageUI()
+      g('paywall').classList.remove('show')
+      g('profile-prompt').classList.remove('show')
+      g('input-area').classList.remove('blocked')
+    } else {
+      const diff = Math.max(0, unblockTime - Date.now())
+      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000)
+      const timeStr = h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`
+      const el = document.getElementById('countdown-timer')
+      if (el) el.textContent = timeStr
+    }
+  }, 1000)
+}
+
+function loadGuestUsage() {
+  let state = getUsageState()
+  state = tryAdvanceTier(state)
+  if (isBlocked(state)) {
+    remaining = 0
+    updateUsageUI()
+    showLimitScreen(state)
+  } else {
+    remaining = getRemainingInTier(state)
+    updateUsageUI()
+  }
+}
+
+async function loadUsageFromDB() {
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await sb.from('usage').select('count').eq('user_id', currentUser.id).eq('date', today).single()
+    remaining = Math.max(0, FREE_LIMIT - (data?.count || 0))
+  } catch { remaining = FREE_LIMIT }
+  updateUsageUI()
+}
+
+async function incrementUsageInDB() {
+  if (!currentUser) return
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await sb.from('usage').select('id,count').eq('user_id', currentUser.id).eq('date', today).single()
+    if (data) await sb.from('usage').update({ count: data.count + 1 }).eq('id', data.id)
+    else await sb.from('usage').insert({ user_id: currentUser.id, date: today, count: 1 })
+  } catch {}
+}
+
+function updateUsageUI() {
+  const pct = (remaining / FREE_LIMIT) * 100
+  g('uc').textContent = `${remaining} / ${FREE_LIMIT}`
+  const f = g('uf')
+  f.style.width = pct + '%'
+  f.className = 'usage-fill' + (remaining <= 0 ? ' out' : remaining <= 2 ? ' warn' : '')
+  if (remaining <= 3) g('upbtn').classList.add('show')
+  if (remaining <= 0) g('input-area').classList.add('blocked')
+}
+
+function showLimitScreen(state) {
+  // Show profile prompt first if no profile, then paywall
+  if (!userProfile.name && !userProfile.goal) {
+    g('profile-prompt').classList.add('show')
+    setTimeout(() => g('profile-prompt').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100)
+  } else {
+    showPaywall(state)
+  }
+  g('input-area').classList.add('blocked')
+  const unblockTime = getUnblockTime(state)
+  if (unblockTime) startCountdown(unblockTime)
+}
+
+function showPaywall(state) {
+  const t = T[currentLang]
+  const paywallSub = g('paywall-sub')
+  const tier = state ? TIERS[state.tier] : null
+  const nextTier = state ? TIERS[state.tier + 1] : null
+  if (tier && tier.wait !== null && nextTier) {
+    paywallSub.innerHTML = `Come back in <span id="countdown-timer">2h 00m 00s</span> for ${nextTier.limit} more messages — or upgrade for unlimited access.`
+  } else {
+    paywallSub.innerHTML = t.pwSub
+  }
+  g('paywall').classList.add('show')
+  setTimeout(() => g('paywall').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100)
+}
+
+function handleUpgrade() { window.open('https://buy.stripe.com/00w00k8JJc3Je6KdFdcMM01', '_blank') }
+
+// ── PROFILE PROMPT ────────────────────────────────────────────────────────────
+function saveProfileAndContinue() {
+  const name = g('pp-name').value.trim()
+  const goal = g('pp-goal').value
+  const context = g('pp-context').value.trim()
+  saveProfile({ name, goal, context, profileCompletedAt: new Date().toISOString() })
+  g('profile-prompt').classList.remove('show')
+  // Add user to mind map center with their name
+  if (name) renderMindMap()
+  showPaywall(getUsageState())
+}
+
+function skipProfilePrompt() {
+  g('profile-prompt').classList.remove('show')
+  showPaywall(getUsageState())
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+async function loadChatHistory() {
+  if (!currentUser) return
+  try {
+    const { data } = await sb.from('conversations').select('id,title,created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20)
+    if (data && data.length > 0) {
+      const list = g('chat-list')
+      list.innerHTML = '<div class="chat-item active" id="cur-item">New conversation</div>'
+      data.forEach(chat => {
+        const el = document.createElement('div')
+        el.className = 'chat-item'
+        el.textContent = chat.title || 'Conversation'
+        el.onclick = () => loadConversation(chat.id, el)
+        list.appendChild(el)
+      })
+    }
+  } catch {}
+}
+
+async function loadConversation(id, el) {
+  try {
+    const { data } = await sb.from('messages').select('role,content').eq('conversation_id', id).order('created_at', { ascending: true })
+    if (!data) return
+    currentChatId = id
+    history = data.map(m => ({ role: m.role, content: m.content }))
+    g('messages').innerHTML = ''
+    document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'))
+    el.classList.add('active')
+    history.forEach(m => addRow(m.role, m.content, false))
+    g('paywall').classList.remove('show')
+    g('profile-prompt').classList.remove('show')
+  } catch {}
+  if (g('sidebar').classList.contains('open')) toggleSidebar()
+}
+
+async function saveMessage(role, content) {
+  if (!currentUser) return
+  try {
+    if (!currentChatId) {
+      const title = content.slice(0, 40) + (content.length > 40 ? '...' : '')
+      const { data } = await sb.from('conversations').insert({ user_id: currentUser.id, title }).select().single()
+      if (data) { currentChatId = data.id; g('cur-item').textContent = title }
+    }
+    if (currentChatId) await sb.from('messages').insert({ conversation_id: currentChatId, user_id: currentUser.id, role, content })
+  } catch {}
+}
+
+// Local conversations for guests
+function getLocalConversations() {
+  return JSON.parse(localStorage.getItem('neuxon_conversations') || '[]')
+}
+
+function saveLocalConversation() {
+  if (history.length === 0) return
+  const convs = getLocalConversations()
+  const id = currentChatId || 'local_' + Date.now()
+  const title = history[0].content.slice(0, 36) + (history[0].content.length > 36 ? '...' : '')
+  const existing = convs.findIndex(c => c.id === id)
+  if (existing >= 0) convs[existing] = { id, title, messages: history, created_at: convs[existing].created_at }
+  else convs.unshift({ id, title, messages: history, created_at: new Date().toISOString() })
+  localStorage.setItem('neuxon_conversations', JSON.stringify(convs.slice(0, 20)))
+  if (!currentChatId) currentChatId = id
+}
+
+function loadLocalChatHistory() {
+  const convs = getLocalConversations()
+  if (convs.length === 0) return
+  const list = g('chat-list')
+  convs.forEach(conv => {
+    const el = document.createElement('div')
+    el.className = 'chat-item'
+    el.textContent = conv.title
+    el.onclick = () => loadLocalConversation(conv.id, el)
+    list.appendChild(el)
+  })
+}
+
+function loadLocalConversation(id, el) {
+  const convs = getLocalConversations()
+  const conv = convs.find(c => c.id === id)
+  if (!conv) return
+  history = conv.messages
+  currentChatId = id
+  g('messages').innerHTML = ''
+  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'))
+  el.classList.add('active')
+  history.forEach(m => addRow(m.role, m.content, false))
+  g('paywall').classList.remove('show')
+  g('profile-prompt').classList.remove('show')
+  if (g('sidebar').classList.contains('open')) toggleSidebar()
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function toggleSidebar() { g('sidebar').classList.toggle('open'); g('overlay').classList.toggle('open') }
+
+function newChat() {
+  if (!currentUser && history.length > 0) saveLocalConversation()
+  history = []; currentChatId = null
+  g('messages').innerHTML = ''
+  const es = document.createElement('div')
+  es.className = 'empty-state'; es.id = 'empty'
+  const t = T[currentLang]
+  es.innerHTML = `<div class="empty-title" id="empty-title">${t.emptyTitle}</div><div class="empty-sub" id="empty-sub">${t.emptySub}</div>`
+  g('messages').appendChild(es)
+  g('paywall').classList.remove('show')
+  g('profile-prompt').classList.remove('show')
+  g('input-area').classList.remove('blocked')
+  document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'))
+  const ci = g('cur-item'); if (ci) ci.classList.add('active')
+  if (g('sidebar').classList.contains('open')) toggleSidebar()
+}
+
+function onInput(el) {
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+  g('sbtn').disabled = !el.value.trim() || busy || remaining <= 0
+}
+
+function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); if (!g('sbtn').disabled) send() } }
+
+function fmt(t) {
+  if (!t) return ''
+  return '<p>' + t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^#{1,6}\s+(.+)$/gm,'<strong>$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code>$1</code>')
+    .replace(/^>\s*(.*)/gm,'<blockquote>$1</blockquote>')
+    .replace(/^[-*]\s+(.+)$/gm,'• $1')
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/\n/g,'<br>') + '</p>'
+}
+
+function addRow(role, text, animate = true) {
+  const es = g('empty'); if (es) es.remove()
+  const row = document.createElement('div')
+  row.className = 'msg-row ' + (role === 'user' ? 'user-row' : 'neuxon-row')
+  if (!animate) row.style.animation = 'none'
+  const sender = document.createElement('div')
+  sender.className = 'msg-sender'
+  sender.textContent = role === 'user' ? (T[currentLang].you || 'You') : 'Neuxon AI'
+  const content = document.createElement('div')
+  content.className = 'msg-content'
+  content.innerHTML = fmt(text)
+  row.appendChild(sender); row.appendChild(content)
+  g('messages').appendChild(row)
+  g('messages').scrollTop = g('messages').scrollHeight
+  return content
+}
+
+function addTyping() {
+  const row = document.createElement('div')
+  row.className = 'msg-row neuxon-row'; row.id = 'trow'
+  const s = document.createElement('div'); s.className = 'msg-sender'; s.textContent = 'Neuxon AI'
+  const d = document.createElement('div'); d.className = 'typing-dots'
+  d.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>'
+  row.appendChild(s); row.appendChild(d)
+  g('messages').appendChild(row)
+  g('messages').scrollTop = g('messages').scrollHeight
+}
+
+function removeTyping() { const t = g('trow'); if (t) t.remove() }
+
+function extractAndSavePatterns(msgs) {
+  if (msgs.length < 2) return
+  const lastUser = msgs.filter(m => m.role === 'user').slice(-1)[0]
+  if (!lastUser) return
+  const text = lastUser.content.toLowerCase()
+  const nameMatch = text.match(/(?:my name is|i'm|i am|call me|me chamo|sou o|sou a)\s+([a-záàâãéêíóôõúüç]+)/i)
+  if (nameMatch && !userProfile.name) saveProfile({ name: nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1) })
+  saveProfile({ lastSeen: new Date().toISOString(), messageCount: (userProfile.messageCount || 0) + 1 })
+}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+async function send() {
+  const inp = g('inp'), text = inp.value.trim()
+  if (!text || busy || remaining <= 0) return
+  inp.value = ''; inp.style.height = 'auto'
+  g('sbtn').disabled = true; busy = true
+
+  // Detect language on first message
+  if (history.length === 0 && !localStorage.getItem('neuxon_lang')) {
+    const detectedLang = detectLanguage(text)
+    applyLanguage(detectedLang)
+    localStorage.setItem('neuxon_lang', detectedLang)
+  }
+
+  addRow('user', text)
+  history.push({ role: 'user', content: text })
+  await saveMessage('user', text)
+
+  remaining--
+  if (currentUser) await incrementUsageInDB()
+  else {
+    let state = getUsageState()
+    state.used++
+    if (state.used >= TIERS[state.tier].limit) state.blockedAt = Date.now()
+    saveUsageState(state)
+    if (state.blockedAt) setTimeout(() => showLimitScreen(state), 200)
+  }
+  updateUsageUI()
+  addTyping()
+
+  try {
+    const res = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history, userProfile: buildMemoryContext() })
+    })
+
+    removeTyping()
+
+    if (!res.ok) {
+      addRow('assistant', T[currentLang].errorOccurred)
+      busy = false; g('sbtn').disabled = !g('inp').value.trim() || remaining <= 0; return
+    }
+
+    // Create streaming bubble
+    const esEl = g('empty'); if (esEl) esEl.remove()
+    const row = document.createElement('div')
+    row.className = 'msg-row neuxon-row'
+    const senderEl = document.createElement('div'); senderEl.className = 'msg-sender'; senderEl.textContent = 'Neuxon AI'
+    const contentEl = document.createElement('div'); contentEl.className = 'msg-content'
+    const mainDiv = document.createElement('div')
+    contentEl.appendChild(mainDiv); row.appendChild(senderEl); row.appendChild(contentEl)
+    g('messages').appendChild(row)
+
+    let fullText = ''
+
+    try {
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.text) { fullText += data.text; mainDiv.innerHTML = fmt(fullText); g('messages').scrollTop = g('messages').scrollHeight }
+            if (data.done && data.fullText) fullText = data.fullText
+          } catch {}
+        }
+      }
+    } catch {
+      const rawText = await res.text().catch(() => '')
+      for (const line of rawText.split('\n')) {
+        if (!line.startsWith('data: ')) continue
+        try { const data = JSON.parse(line.slice(6)); if (data.text) fullText += data.text } catch {}
+      }
+      mainDiv.innerHTML = fmt(fullText)
+    }
+
+    if (!fullText) { mainDiv.innerHTML = fmt(T[currentLang].errorOccurred) }
+
+    history.push({ role: 'assistant', content: fullText })
+    await saveMessage('assistant', fullText)
+    extractAndSavePatterns(history)
+    extractNodesFromResponse(fullText)
+
+    if (!currentUser) {
+      saveLocalConversation()
+      const title = history[0]?.content?.slice(0, 34) + (history[0]?.content?.length > 34 ? '...' : '')
+      const ci = g('cur-item'); if (ci) ci.textContent = title
+    }
+
+  } catch {
+    removeTyping()
+    addRow('assistant', T[currentLang].couldNotConnect)
+  }
+
+  busy = false
+  g('sbtn').disabled = !g('inp').value.trim() || remaining <= 0
+}
+
+// ── FEEDBACK ──────────────────────────────────────────────────────────────────
+let selectedStar = 0
+let feedbackEntries = JSON.parse(localStorage.getItem('neuxon_feedback') || '[]')
+
+function openFeedback() { g('feedback-screen').classList.add('open'); renderFeedbackEntries() }
+function closeFeedback() { g('feedback-screen').classList.remove('open') }
+
+function setStar(n) {
+  selectedStar = n
+  document.querySelectorAll('.star-btn').forEach((btn, i) => btn.classList.toggle('active', i < n))
+}
+
+function submitFeedback() {
+  if (selectedStar === 0) return
+  const text = g('feedback-text').value.trim()
+  feedbackEntries.unshift({ stars: selectedStar, text, time: new Date().toLocaleString() })
+  localStorage.setItem('neuxon_feedback', JSON.stringify(feedbackEntries))
+  selectedStar = 0
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'))
+  g('feedback-text').value = ''
+  renderFeedbackEntries()
+}
+
+function renderFeedbackEntries() {
+  const container = g('feedback-entries')
+  container.querySelectorAll('.feedback-entry').forEach(e => e.remove())
+  const empty = g('fp-empty')
+  if (feedbackEntries.length === 0) { if (empty) empty.style.display = 'block'; return }
+  if (empty) empty.style.display = 'none'
+  feedbackEntries.slice(0, 20).forEach(entry => {
+    const div = document.createElement('div'); div.className = 'feedback-entry'
+    div.innerHTML = `<div class="feedback-entry-stars">${'★'.repeat(entry.stars)}${'☆'.repeat(5-entry.stars)}</div>${entry.text ? `<div class="feedback-entry-text">${entry.text}</div>` : ''}<div class="feedback-entry-time">${entry.time}</div>`
+    container.appendChild(div)
+  })
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Load saved language
+const savedLang = localStorage.getItem('neuxon_lang')
+if (savedLang) {
+  applyLanguage(savedLang)
+} else {
+  try {
+    const convs = JSON.parse(localStorage.getItem('neuxon_conversations') || '[]')
+    if (convs.length > 0) {
+      const msgs = convs[0].messages || []
+      const userMsgs = msgs.filter(m => m.role === 'user')
+      if (userMsgs.length > 0) {
+        const detectedLang = detectLanguage(userMsgs[0].content)
+        if (detectedLang !== 'en') { applyLanguage(detectedLang); localStorage.setItem('neuxon_lang', detectedLang) }
+      }
+    }
+  } catch {}
+}
+
+loadGuestUsage()
+if (!currentUser) loadLocalChatHistory()
+renderMindMap()
+renderFeedbackEntries()
+g('inp').focus()
+
+// Resize mind map on window resize
+window.addEventListener('resize', () => { if (mindMapNodes.length > 0) renderMindMap() })
+</script>
+</body>
+</html>
